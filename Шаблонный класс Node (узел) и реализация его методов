@@ -1,0 +1,152 @@
+//Шаблонный класс узел Node
+
+//Предварителные обьявления классов LinkedList и node_iterator
+template<typename T> class LinkedList;
+template<typename T> class node_iterator;
+
+//Сам шаблон узла
+template<typename T>
+class Node
+{
+private:
+	friend class LinkedList<T>;
+	friend class node_iterator<T>;
+	T data;        /*data item*/
+	Node<T>* prev; /*previous node*/
+	Node<T>* next; /*next node*/
+	Node(const T&);/*constructs node with no previous ans next links*/
+	Node(const T&, Node<T>*, Node<T>*); /*constructs node with links*/
+	T GetData() const; /*returns data item*/
+	void InsertAfter(Node<T>*);  /*inserts after node*/
+	void InsertBefore(Node<T>*); /*inserts before node*/
+	Node<T>* DeleteAfter();      /*deletes after node*/
+	Node<T>* DeleteBefore();     /*deletes before node*/
+	Node<T>* GetNext() const;    /*get next node*/
+	Node<T>* GetPrev() const;    /*get previous node*/
+public:
+	Node<T>* operator+(int);
+};
+
+//Конструкторы
+template<typename T>
+inline Node<T>::Node(const T& elem) : data(elem), prev(nullptr), next(nullptr)
+{
+}
+
+template<typename T>
+inline Node<T>::Node(const T& elem, Node<T>* prevP, Node<T>* nextP) : data(elem), prev(prevP), next(nextP)
+{
+	if (next != nullptr)
+		next->prev = this;
+	if (prev != nullptr)
+		prev->next = this;
+}
+
+//Вернуть данные, хранящиеся в узле
+template<typename T>
+inline T Node<T>::GetData() const
+{
+	return data;
+}
+
+//Вставить новый узел после текущего
+template<typename T>
+inline void Node<T>::InsertAfter(Node<T>* p)
+{
+	if (this != p)
+	{
+		p->next = this->next;
+		p->prev = this;
+		if (this->next)
+			this->next->prev = p;
+		this->next = p;
+	}
+}
+
+//Вставить новый узел до текущего
+template<typename T>
+inline void Node<T>::InsertBefore(Node<T>* p)
+{
+	if (this != p)
+	{
+		p->next = this;
+		p->prev = this->prev;
+		if (this->prev)
+			this->prev->next = p;
+		this->prev = p;
+	}
+}
+
+//Удалить узел после текущего
+template<typename T>
+inline Node<T>* Node<T>::DeleteAfter()
+{
+	/*If next is NULL return NULL*/
+	if (!this->next)
+		return nullptr;
+
+	/*Save next node*/
+	Node<T>* tmp = this->next;
+
+	/*New next is ahead the current next. If a new next is not NULL: next prev is this*/
+	if (this->next = this->next->next)
+		this->next->prev = this;
+
+	/*Return detached node*/
+	return tmp;
+}
+
+//Удалить ущел до текущего
+template<typename T>
+inline Node<T>* Node<T>::DeleteBefore()
+{
+	/*If next is NULL return NULL*/
+	if (!this->prev)
+		return nullptr;
+
+	/*Save next node*/
+	Node<T>* tmp = this->prev;
+
+	/*New prev is behind the current prev. If a new prev is not NULL: prev next is this*/
+	if (this->prev = this->prev->prev)
+		this->prev->next = this;
+
+	/*Breake an old connections*/
+	/*tmp->prev = nullptr;
+	tmp->next = nullptr;*/
+
+	/*Return detached node*/
+	return tmp;
+}
+
+//Получить указатель на следущий узел за текущим
+template<typename T>
+inline Node<T>* Node<T>::GetNext() const
+{
+	return next;
+}
+
+//Получить указатель на предыдуший узел за текущим
+template<typename T>
+inline Node<T>* Node<T>::GetPrev() const
+{
+	return prev;
+}
+
+//Получить узел, стоящий правее на pos узлов от текущего
+template<typename T>
+inline Node<T>* Node<T>::operator+(int pos)
+{
+	if (this)
+	{
+		Node<T>* returnNode = this;
+		size_t step = 0;
+		while (step < pos)
+		{
+			if (!(returnNode = returnNode->GetNext()))
+				throw out_of_range("out_of_list_range");
+			step++;
+		}
+		return returnNode;
+	}
+}
