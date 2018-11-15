@@ -1,0 +1,81 @@
+//аблонный класс iterator
+
+template <typename T>
+class node_iterator : public std::iterator<std::input_iterator_tag, T>
+{
+private:
+	Node<T>* pItem;
+public:
+	node_iterator(Node<T>* p = nullptr); //конструктор
+	node_iterator operator++(); //префиксный инкремент
+	node_iterator operator--(); //префиксный декремент
+	node_iterator operator++(int); //постфиксный инкремент
+	node_iterator operator--(int); //постфиксный декремент
+	T* operator->() { return pItem->GetData(); } //стрелка
+	T operator*(); //разыменование
+	operator Node<T>*() { return pItem; } //преобразование
+};
+
+template<typename T>
+inline node_iterator<T>::node_iterator(Node<T>* p): pItem(p)
+{
+}
+
+template<typename T>
+inline node_iterator<T> node_iterator<T>::operator++()
+{
+	if (pItem)
+	{
+		pItem = pItem->GetNext();
+		return *this;
+	}
+	else
+		throw "list iterator is not incrementable\n";
+}
+
+template<typename T>
+inline node_iterator<T> node_iterator<T>::operator--()
+{
+	if (pItem)
+	{
+		pItem = pItem->GetPrev();
+		return *this;
+	}
+	else
+		throw "list iterator is not decrementable\n";
+}
+
+template<typename T>
+inline node_iterator<T> node_iterator<T>::operator++(int)
+{
+	node_iterator<T> tmp = *this;
+	if (pItem)
+	{
+		pItem = pItem->GetNext();
+		return tmp;
+	}
+	else
+		throw "list iterator is not incrementable\n";
+}
+
+template<typename T>
+inline node_iterator<T> node_iterator<T>::operator--(int)
+{
+	node_iterator<T> tmp = *this;
+	if (pItem)
+	{
+		pItem = pItem->GetPrev();
+		return tmp;
+	}
+	else
+		throw "list iterator is not decrementable\n";
+}
+
+template<typename T>
+inline T node_iterator<T>::operator*()
+{
+	if (pItem)
+		return pItem->GetData();
+	else
+		throw "list iterator not dereferencable\n";
+}
