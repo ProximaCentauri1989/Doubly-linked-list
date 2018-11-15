@@ -1,4 +1,4 @@
-//аблонный класс iterator
+//Шаблонный класс iterator (двусторонний)
 
 template <typename T>
 class node_iterator : public std::iterator<std::input_iterator_tag, T>
