@@ -1,0 +1,352 @@
+Шаблонный класс двусвязный список LinkedList
+template<typename T>
+class LinkedList
+{
+public:
+	/*Iterator*/
+	typedef node_iterator<T> iterator; //node_iterator<T> член списка с псевдонимом iterator
+
+	/*Constructors/destructor*/
+	LinkedList();									
+	LinkedList(size_t, size_t val = 0);				
+	LinkedList(const LinkedList<T>&);				
+	~LinkedList();	
+  
+	/*Assignment operator overloadt*/
+	LinkedList<T>& operator=(const LinkedList<T>&); 
+
+	/*Checking for list state*/
+	size_t Size() const;                            
+	bool Empty() const;
+  
+	/*Managing list*/
+	Node<T>* Begin() { return head; }
+	Node<T>* End() 
+	{ 
+		if(!rear) 
+			return rear;
+		return rear->GetNext();
+	}
+  
+	/*Outputting list*/
+	void Print() const;	
+
+	/*Insertion methods*/
+	void Push_front(const T&);						
+	void Push_back(const T&);
+  iterator Insert(iterator&, const T&);
+	void Insert(iterator, iterator, iterator);
+
+	/*Deletion methods*/
+	T Pop_front();                                 
+	T Pop_Back();
+	node_iterator<T> erase(iterator);
+	Node<T>* erase(iterator, iterator);
+	/*Clear the list*/
+	void Clear();									
+
+private:
+	/*Access pointers to the begin and the end of the list*/
+	Node<T> *head, *rear;
+	/*List size(amount of items)*/
+	size_t size;
+protected:
+	/*Create a new node*/
+	Node<T>* GetNode(const T&, Node<T> *p = nullptr); 
+};
+ 
+template<typename T>
+inline LinkedList<T>::LinkedList(): head(nullptr), rear(head), size(0)
+{
+}
+
+template<typename T>
+inline LinkedList<T>::LinkedList(size_t amount, size_t val): head(nullptr), rear(nullptr), size(amount)
+{
+	head = GetNode(val, head);
+	Node<T> *currPtr = head, *newNode;
+	for (size_t n = 1; n < size; n++)
+	{
+		newNode = GetNode(val);
+		currPtr->InsertAfter(newNode);
+		currPtr = currPtr->GetNext();
+	}
+	rear = currPtr;
+}
+
+template<typename T>
+inline LinkedList<T>::LinkedList(const LinkedList<T>& rList): head(nullptr), rear(head), size(0)
+{
+	LinkedList<T>::iterator forward_iter = rList.head;
+
+	while (forward_iter)
+	{
+		this->Push_back(*forward_iter);
+		forward_iter++;
+	}
+}
+
+template<typename T>
+inline LinkedList<T>::~LinkedList()
+{
+	Clear();
+}
+
+template<typename T>
+inline LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& rList)
+{
+	this->Clear();
+	LinkedList<T>::iterator forward_iter = rList.head;
+
+	while (forward_iter)
+	{
+		this->Push_back(*forward_iter);
+		forward_iter++;
+	}
+
+	return *this;
+}
+
+template<typename T>
+inline Node<T>* LinkedList<T>::GetNode(const T& elem, Node<T>* hd)
+{
+	Node<T> *prv, *nxt = hd;
+
+	if (hd)
+		prv = hd->GetPrev();
+	else
+		prv = nullptr;
+
+	Node<T>* newNode = new Node<T>(elem, prv, nxt);
+
+	if (!newNode)
+		throw "Memory allocation error!\n";
+	return newNode;
+}
+
+template<typename T>
+inline size_t LinkedList<T>::Size() const
+{
+	return size;
+}
+
+template<typename T>
+inline bool LinkedList<T>::Empty() const
+{
+	return head == nullptr;
+}
+
+/*8*/
+template<typename T>
+inline void LinkedList<T>::Print() const
+{
+	LinkedList<T>::iterator iter = head;
+	while (iter)
+	{
+		cout << *iter << ' ';
+		iter++;
+	}
+}
+
+template<typename T>
+inline void LinkedList<T>::Push_front(const T& elem)
+{
+	head = GetNode(elem, head);
+	if (!head->next)
+		rear = head;
+
+	size++;
+}
+
+template<typename T>
+inline void LinkedList<T>::Push_back(const T& elem)
+{
+	Node<T> *oldRear, *newRear;
+	oldRear = head;
+
+	/*If linked list is empty insert in front*/
+	if (!head)
+		rear = head = GetNode(elem, head);
+	else
+	{   /*Search for existence rear element*/
+		while (oldRear->GetNext() != nullptr)
+			oldRear = oldRear->GetNext();
+
+		/*Create new rear*/
+		newRear = new Node<T>(elem);
+
+		/*Insert new rear element*/
+		oldRear->InsertAfter(newRear);
+		rear = oldRear->GetNext();
+	}
+	size++;
+}
+
+template<typename T>
+inline void LinkedList<T>::Clear()
+{
+	Node<T> *currPtr = head;
+	while (currPtr)
+	{
+		head = head->GetNext();
+		delete currPtr;
+		currPtr = head;
+	}
+	head = rear = nullptr;
+	size = 0;
+}
+
+template<typename T>
+inline T LinkedList<T>::Pop_front()
+{
+	/*If list is empty nothing to exclude*/
+	if (!head)
+		throw "List is empty";
+
+	/*The new head is the next node after the current head*/
+	Node<T> *tmp = head;
+
+	if (head = head->GetNext()) /*If the next head != nullptr - prev of the head is nullptr*/
+		head->prev = nullptr;
+	else /*If the next head is nullptr, the rear also is nullptr*/
+		rear = nullptr;
+
+	/*Get key data from the old head*/
+	T elem = tmp->GetData();
+	/*Delete an old head*/
+	delete tmp;
+	/*Change the list size*/
+	size--;
+	return elem;
+}
+
+template<typename T>
+inline T LinkedList<T>::Pop_Back()
+{
+	Node<T> *oldBack;
+	T elem;
+
+	if(!rear)
+		throw "Deletion error\n";
+	else
+	{
+		oldBack = rear;
+		if (!(rear = rear->GetPrev()))
+			head = nullptr;
+		else
+			rear->next = nullptr;
+		elem = oldBack->data;
+		delete oldBack;
+	}
+
+	size--;
+	return elem;
+}
+
+template<typename T>
+inline node_iterator<T> LinkedList<T>::Insert(iterator& position, const T& val)
+{
+	Node<T> *insPos = position;
+
+	iterator returnIter = nullptr;
+
+	if (insPos)
+	{
+		if (!insPos->GetPrev())
+		{
+			this->Push_front(val);
+		}
+		else
+		{
+			Node<T>* newNode = GetNode(val);
+			insPos->InsertBefore(newNode);
+		}
+		returnIter = insPos->GetPrev();
+	}
+	else
+	{
+		this->Push_front(val);
+		returnIter = head;
+	}
+
+	this->size++;
+	return returnIter;
+}
+
+template<typename T>
+inline void LinkedList<T>::Insert(iterator position, iterator first, iterator last)
+{
+	if (!first)
+		return;
+	else if (first == last)
+		this->Insert(position, *first);
+	else
+	{
+		LinkedList<T>::iterator iter = first;
+		Node<T> *newNode, *tmp, *tmpHead, *insPos = position;
+		tmp = tmpHead = newNode = new Node<T>(*iter);
+		if(insPos)
+			insPos->InsertBefore(newNode);
+		else
+			rear = head = newNode;
+		size++;
+
+		while (++iter != last)
+		{
+			newNode = new Node<T>(*iter);
+			tmp->InsertAfter(newNode);
+			tmp = tmp->next;
+			size++;
+		}
+		if (insPos == head)
+			head = tmpHead;
+	}
+}
+
+template<typename T>
+inline node_iterator<T> LinkedList<T>::erase(iterator position)
+{
+	Node<T>* erasePos = position;
+	iterator returnIter = nullptr;
+
+	if (erasePos)
+	{
+		returnIter = erasePos->GetNext();
+		if (!erasePos->GetPrev())
+			this->Pop_front();
+		else if (!erasePos->GetNext())
+			this->Pop_Back();
+		else
+		{
+			erasePos = erasePos->GetPrev();
+			erasePos->DeleteAfter();
+		}
+	}
+	return returnIter;
+}
+
+template<typename T>
+inline Node<T>* LinkedList<T>::erase(iterator first, iterator last)
+{
+	if (!head)
+		throw "Deleting error\n";
+	else if (first && first == last)
+	{
+		this->erase(first);
+	}
+	else if(first && first != last)
+	{
+		size_t n = distance(first, last);
+		if (size < n)
+			throw "Deleting error\n";
+		else if(size == n)
+			this->Clear();
+		else
+		{
+			Node<T>* lastNode = last;
+			LinkedList<T>::iterator firstIter = first, lastIter = lastNode->GetNext();
+			while (firstIter != lastIter)
+				firstIter = this->erase(firstIter);	
+		}
+	}
+}
